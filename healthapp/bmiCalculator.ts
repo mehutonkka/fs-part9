@@ -1,6 +1,6 @@
 import { isNotNumber } from './utils.ts'
 
-const calculateBmi = (height: number, weight: number): string => {
+export const calculateBmi = (height: number, weight: number): string => {
     const heightMeters = height / 100
     const bmi = weight / (heightMeters * heightMeters)
 
@@ -55,14 +55,16 @@ const parseArguments = (args: string[]): { height: number, weight: number } => {
         weight
     }
 }
-
-try {
-    const { height, weight } = parseArguments(process.argv)
-    console.log(calculateBmi(height, weight))
-} catch (error: unknown) {
-  let errorMessage = 'Something bad happened.'
-  if (error instanceof Error) {
-    errorMessage += ' Error: ' + error.message;
-  }
-  console.log(errorMessage);
+if (process.argv[1] === import.meta.filename) {
+    try {
+        const { height, weight } = parseArguments(process.argv)
+        console.log(calculateBmi(height, weight))
+    } catch (error: unknown) {
+      let errorMessage = 'Something bad happened.'
+      if (error instanceof Error) {
+        errorMessage += ' Error: ' + error.message;
+      }
+      console.log(errorMessage);
+    }
 }
+
