@@ -26,8 +26,8 @@ app.get('/bmi', (req, res) => {
         });
     }
 
-    const heightNum = Number(height)
-    const weightNum = Number(weight)
+    const heightNum = Number(height);
+    const weightNum = Number(weight);
 
     const bmi = calculateBmi(heightNum, weightNum);
 
@@ -38,4 +38,5 @@ app.get('/bmi', (req, res) => {
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
+
 
