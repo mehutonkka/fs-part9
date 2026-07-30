@@ -7,7 +7,7 @@ const app = express();
 
 app.use(express.json());
 
-const PORT = 3003;
+const PORT = 3000;
 
 app.get('/hello', (_req, res) => {
     res.send('Hello Full Stack!');
