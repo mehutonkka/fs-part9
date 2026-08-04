@@ -1,7 +1,16 @@
 import { useEffect, useState } from 'react'
 import { Weather, Visibility, type DiaryEntry} from './types'
 import diaryService from './services/diaryService'
+import axios from 'axios'
 
+interface ZodIssue {
+  message: string
+  path: (string | number)[]
+}
+
+interface ErrorResponse {
+  error: ZodIssue[]
+}
 
 const App = () => {
   const [diaries, setDiaries] = useState<DiaryEntry[]>([]);
@@ -9,6 +18,7 @@ const App = () => {
   const [newWeather, setNewWeather] = useState<Weather>(Weather.Sunny)
   const [newVisibility, setNewVisibility] = useState<Visibility>(Visibility.Great)
   const [newComment, setNewComment] = useState('')
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   useEffect(() => {
     diaryService.getAll().then((initialDiaries) => {
@@ -22,6 +32,22 @@ const App = () => {
       .create({ date: newDate, weather: newWeather, visibility: newVisibility, comment: newComment })
       .then((returnedDiary) => {
         setDiaries(diaries.concat(returnedDiary));
+      })
+      .catch((error: unknown) => {
+        if (axios.isAxiosError<ErrorResponse>(error) && error.response) {
+          const message = error.response.data.error
+            .map((issue) => {
+              const field = issue.path.join('.');
+              return `Error: ${field}: ${issue.message}`;
+            })
+            .join(', ');
+          setErrorMessage(message);
+        } else {
+          setErrorMessage('unknown error occurred');
+        }
+        setTimeout(() => {
+          setErrorMessage(null);
+        }, 5000);
       });
     setNewDate('');
     setNewWeather(Weather.Sunny);
@@ -32,6 +58,10 @@ const App = () => {
   return (
     <div>
       <h2>Add new diary</h2>
+
+      {errorMessage && (
+        <div style={{ color: 'red' }}>{errorMessage}</div>
+      )}
       <form onSubmit={diaryCreation}>
         <div>
           date
