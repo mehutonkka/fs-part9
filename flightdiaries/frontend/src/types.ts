@@ -21,7 +21,8 @@ export interface DiaryEntry {
   id: number,
   weather: Weather,
   visibility: Visibility,
-  date: string
+  date: string,
+  comment?: string
 }
 
 export type NewDiaryEntry = Omit<DiaryEntry, 'id'>;
