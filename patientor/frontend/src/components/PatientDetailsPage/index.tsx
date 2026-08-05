@@ -4,12 +4,15 @@ import { Box, Typography } from '@mui/material';
 import FemaleIcon from '@mui/icons-material/Female';
 import MaleIcon from '@mui/icons-material/Male';
 
-import { Patient } from "../../types";
+import { Patient, Diagnosis } from "../../types";
 
 import patientService from "../../services/patients";
 
+interface Props {
+    diagnoses: Diagnosis[];
+}
 
-const PatientDetailsPage = () => {
+const PatientDetailsPage = ({ diagnoses }: Props) => {
     const { id } = useParams<{ id: string }>();
     const [patient, setPatient] = useState<Patient | null>(null);
 
@@ -65,9 +68,14 @@ const PatientDetailsPage = () => {
                         <p key={entry.id}>
                             <p>{entry.date}: <i>{entry.description}</i></p>
                             <ul>
-                                {entry.diagnosisCodes?.map((code) => (
-                                    <li key={code}>{code}</li>
-                                ))}
+                                {entry.diagnosisCodes?.map((code) => {
+                                    const diagnosis = diagnoses.find((d) => d.code === code);
+                                    return (
+                                        <li key={code}>
+                                            {code} {diagnosis?.name}
+                                        </li>
+                                    );
+                                })}
                             </ul>
                         </p>
                     ))}
