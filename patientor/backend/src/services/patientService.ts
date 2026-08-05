@@ -13,14 +13,14 @@ const getNonSensitivePatients = (): NonSensitivePatient[] => {
     name,
     dateOfBirth,
     gender,
-    occupation
+    occupation,
   }));
 };
 
 const addPatient = (entry: NewPatient): Patient => {
     const newPatient = {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
         id: uuid(),
+        entries: [],
         ...entry
     };
     patients.push(newPatient);

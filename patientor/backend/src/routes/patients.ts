@@ -15,6 +15,15 @@ router.post("/", newPatientParser, (req: Request<unknown, unknown, NewPatient>, 
     res.json(addedPatient);    
 });
 
+router.get("/:id", (req: Request<{ id: string }>, res: Response<Patient | { error: string }>) => {
+    const patient = patientService.getPatients().find(p => p.id === req.params.id);
+    if (patient) {
+        res.json(patient);
+    } else {
+        res.status(404).json({ error: "invalid patient id" });
+    }
+});
+
 router.use(errorMiddleware);
 
 export default router;
