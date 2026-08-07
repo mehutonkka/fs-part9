@@ -1,12 +1,15 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, Divider } from '@mui/material';
 import FemaleIcon from '@mui/icons-material/Female';
 import MaleIcon from '@mui/icons-material/Male';
 
 import { Patient, Diagnosis } from "../../types";
 
 import patientService from "../../services/patients";
+
+import EntryDetails from '../EntryDetails';
+
 
 interface Props {
     diagnoses: Diagnosis[];
@@ -60,24 +63,13 @@ const PatientDetailsPage = ({ diagnoses }: Props) => {
               <p>ssn: {patient.ssn}</p>
               <p>occupation: {patient.occupation}</p>
               <h4>entries</h4>
+              <Divider sx={{ mt: 2 }} />
                 {patient.entries.length === 0 ? (
                     <p>no entries for {patient.name}</p>
                 ) : (
                     <div>
                     {patient.entries.map((entry) => (
-                        <p key={entry.id}>
-                            <p>{entry.date}: <i>{entry.description}</i></p>
-                            <ul>
-                                {entry.diagnosisCodes?.map((code) => {
-                                    const diagnosis = diagnoses.find((d) => d.code === code);
-                                    return (
-                                        <li key={code}>
-                                            {code} {diagnosis?.name}
-                                        </li>
-                                    );
-                                })}
-                            </ul>
-                        </p>
+                        <EntryDetails key={entry.id} entry={entry} diagnoses={diagnoses} />
                     ))}
                     </div>
                 )}
