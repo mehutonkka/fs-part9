@@ -1,6 +1,16 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { Box, Typography, Divider } from '@mui/material';
+import {
+  Box,
+  Typography,
+  Divider,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  OutlinedInput,
+  Button,
+} from "@mui/material";
 import FemaleIcon from '@mui/icons-material/Female';
 import MaleIcon from '@mui/icons-material/Male';
 import axios from "axios";
@@ -35,6 +45,9 @@ const PatientDetailsPage = ({ diagnoses }: Props) => {
     const [employerName, setEmployerName] = useState("");
     const [sickLeaveStartDate, setSickLeaveStartDate] = useState("");
     const [sickLeaveEndDate, setSickLeaveEndDate] = useState("");
+    const [diagnosisCodes, setDiagnosisCodes] = useState<string[]>([]);
+
+    const [entryFormVisible, setEntryFormVisible] = useState(false);
 
     
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -49,40 +62,55 @@ const PatientDetailsPage = ({ diagnoses }: Props) => {
         let newEntry: EntryWithoutId;
 
         switch (entryType) {
-            case "HealthCheck":
-                newEntry = {
-                    type: "HealthCheck",
-                    description,
-                    date,
-                    specialist,
-                    healthCheckRating
-                };
-                break;
-            case "Hospital":
-                newEntry = {
-                    type: "Hospital",
-                    description,
-                    date,
-                    specialist,
-                    discharge: {
-                        date: dischargeDate,
-                        criteria: dischargeCriteria
-                    }
-                };
-                break;
-            case "OccupationalHealthcare":
-                newEntry = {
-                    type: "OccupationalHealthcare", 
-                    description,
-                    date,
-                    specialist,
-                    employerName,
+          case "HealthCheck":
+            newEntry = {
+              type: "HealthCheck",
+              description,
+              date,
+              specialist,
+              healthCheckRating,
+              ...(diagnosisCodes.length > 0
+                ? { diagnosisCodes }
+                : {}),
+            };
+            break;
+        
+          case "Hospital":
+            newEntry = {
+              type: "Hospital",
+              description,
+              date,
+              specialist,
+              discharge: {
+                date: dischargeDate,
+                criteria: dischargeCriteria,
+              },
+              ...(diagnosisCodes.length > 0
+                ? { diagnosisCodes }
+                : {}),
+            };
+            break;
+        
+          case "OccupationalHealthcare":
+            newEntry = {
+              type: "OccupationalHealthcare",
+              description,
+              date,
+              specialist,
+              employerName,
+              ...(diagnosisCodes.length > 0
+                ? { diagnosisCodes }
+                : {}),
+              ...(sickLeaveStartDate && sickLeaveEndDate
+                ? {
                     sickLeave: {
-                        startDate: sickLeaveStartDate,
-                        endDate: sickLeaveEndDate
-                    }
-                };
-                break;
+                      startDate: sickLeaveStartDate,
+                      endDate: sickLeaveEndDate,
+                    },
+                  }
+                : {}),
+            };
+            break;
         }
 
         try {
@@ -103,6 +131,8 @@ const PatientDetailsPage = ({ diagnoses }: Props) => {
             setSickLeaveStartDate("");
             setSickLeaveEndDate("");
             setErrorMessage(null);
+            setDiagnosisCodes([]);
+            setEntryFormVisible(false);
         } catch (error: unknown) {
             if (axios.isAxiosError<ErrorResponse>(error) && error.response) {
             const message = error.response.data.error
@@ -163,20 +193,39 @@ const PatientDetailsPage = ({ diagnoses }: Props) => {
               <p>ssn: {patient.ssn}</p>
               <p>occupation: {patient.occupation}</p>
               <h4>New Entry</h4>
-
+              {!entryFormVisible && (
+                <Button variant="contained" onClick={() => setEntryFormVisible(true)}>
+                  Add New Entry
+                </Button>
+              )}
               {errorMessage && (
                   <div style={{ color: "red" }}>
                   {errorMessage}
                   </div>
               )}
               
-              <form onSubmit={submitNewEntry}>
-                    <select value={entryType} onChange={(event) => setEntryType(
+              {entryFormVisible && (
+                <Box component="form" onSubmit={submitNewEntry}
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 1.5,
+                    maxWidth: 500,
+                }}>
+                    <select
+                      value={entryType}
+                      onChange={(event) =>
+                        setEntryType(
                           event.target.value as
                             | "HealthCheck"
                             | "Hospital"
                             | "OccupationalHealthcare"
-                        )}>
+                        )
+                      }
+                      style={{
+                        width: "220px",
+                        padding: "6px",
+                      }}>
                       <option value="HealthCheck">
                         Health Check
                       </option>
@@ -187,20 +236,47 @@ const PatientDetailsPage = ({ diagnoses }: Props) => {
                         Occupational Healthcare
                       </option>
                     </select>
-                  <div>
-                    date
-                    <input value={date} onChange={(event) => setDate(event.target.value)} />
-                  </div>
+                  <label>
+                    Date
+                    <input type="date" value={date} onChange={(event) => setDate(event.target.value)} />
+                  </label>
 
-                  <div>
-                    description
+                  <label>
+                    Description
                     <input value={description} onChange={(event) => setDescription(event.target.value)} />
-                  </div>
+                  </label>
                   
-                  <div>
-                    specialist
+                  <label>
+                    Specialist
                     <input value={specialist} onChange={(event) => setSpecialist(event.target.value)} />
-                  </div>
+                  </label>
+                  <FormControl sx={{ minWidth: 200 }}>
+                      <InputLabel>Diagnosis codes</InputLabel>
+                                      
+                      <Select
+                      multiple
+                      value={diagnosisCodes}
+                      onChange={(event) => {
+                          const value = event.target.value;
+                      
+                          setDiagnosisCodes(
+                          typeof value === "string"
+                              ? value.split(",")
+                              : value
+                          );
+                      }}
+                      input={<OutlinedInput label="Diagnosis codes" />}
+                      >
+                      {diagnoses.map((diagnosis) => (
+                          <MenuItem
+                          key={diagnosis.code}
+                          value={diagnosis.code}
+                          >
+                          {diagnosis.code} {diagnosis.name}
+                          </MenuItem>
+                      ))}
+                      </Select>
+                  </FormControl>
                   
                   
 
@@ -208,7 +284,7 @@ const PatientDetailsPage = ({ diagnoses }: Props) => {
                   <div>  
                     <div>
                       discharge date
-                      <input value={dischargeDate} onChange={(event) => setDischargeDate(event.target.value)} />
+                      <input type="date" value={dischargeDate} onChange={(event) => setDischargeDate(event.target.value)} />
                     </div>
                     <div>
                         discharge criteria
@@ -225,24 +301,50 @@ const PatientDetailsPage = ({ diagnoses }: Props) => {
                     </div>
                     <div>
                         sick leave start date
-                        <input value={sickLeaveStartDate} onChange={(event) => setSickLeaveStartDate(event.target.value)} />
+                        <input type="date" value={sickLeaveStartDate} onChange={(event) => setSickLeaveStartDate(event.target.value)} />
                     </div>
                     <div>
                         sick leave end date
-                        <input value={sickLeaveEndDate} onChange={(event) => setSickLeaveEndDate(event.target.value)} />
+                        <input type="date" value={sickLeaveEndDate} onChange={(event) => setSickLeaveEndDate(event.target.value)} />
                     </div>
                   </div>
                   )}
 
                   {entryType === "HealthCheck" && (
-                    <div>
-                        health check rating
-                        <input value={healthCheckRating} onChange={(event) => setHealthCheckRating(Number(event.target.value) as HealthCheckRatingType)} />
-                    </div>
+                    <FormControl sx={{ minWidth: 200 }}>
+                        <InputLabel>Health rating</InputLabel>
+                                    
+                        <Select
+                        value={healthCheckRating}
+                        label="Health rating"
+                        onChange={(event) =>
+                            setHealthCheckRating(
+                            Number(event.target.value) as HealthCheckRatingType
+                            )
+                        }
+                        >
+                        <MenuItem value={HealthCheckRating.Healthy}>
+                            Healthy
+                        </MenuItem>
+                    
+                        <MenuItem value={HealthCheckRating.LowRisk}>
+                            Low Risk
+                        </MenuItem>
+                    
+                        <MenuItem value={HealthCheckRating.HighRisk}>
+                            High Risk
+                        </MenuItem>
+                    
+                        <MenuItem value={HealthCheckRating.CriticalRisk}>
+                            Critical Risk
+                        </MenuItem>
+                        </Select>
+                    </FormControl>
                   )}
                   
                   <button type="submit">Add</button>
-              </form>
+              </Box>
+                )}
               <h4>entries</h4>
               <Divider sx={{ mt: 2 }} />
                 {patient.entries.length === 0 ? (
