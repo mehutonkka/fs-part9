@@ -80,7 +80,7 @@ export type NonSensitivePatient = Omit<Patient, 'ssn' | 'entries'>;
 
 const BaseEntrySchema = z.object({
     description: z.string(),
-    date: z.string(),
+    date: z.iso.date(),
     specialist: z.string(),
     diagnosisCodes: z.array(z.string()).optional()
 });

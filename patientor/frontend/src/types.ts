@@ -10,14 +10,14 @@ export enum Gender {
   Other = "other"
 }
 
-const HealthCheckRating = {
+export const HealthCheckRating = {
   Healthy: 0,
   LowRisk: 1,
   HighRisk: 2,
   CriticalRisk: 3,
 } as const;
 
-type HealthCheckRating = typeof HealthCheckRating[keyof typeof HealthCheckRating];
+export type HealthCheckRatingType = typeof HealthCheckRating[keyof typeof HealthCheckRating];
 
 interface BaseEntry {
   id: string;
@@ -29,7 +29,7 @@ interface BaseEntry {
 
 interface HealthCheckEntry extends BaseEntry {
   type: "HealthCheck";
-  healthCheckRating: HealthCheckRating;
+  healthCheckRating: HealthCheckRatingType;
 }
 
 interface HospitalEntry extends BaseEntry {
