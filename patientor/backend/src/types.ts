@@ -14,21 +14,21 @@ export const Gender = {
 
 export type Gender = typeof Gender[keyof typeof Gender];
 
-const HealthCheckRating = {
+export const HealthCheckRating = {
   Healthy: 0,
   LowRisk: 1,
   HighRisk: 2,
   CriticalRisk: 3,
 } as const;
 
-type HealthCheckRating = typeof HealthCheckRating[keyof typeof HealthCheckRating];
+export type HealthCheckRating = typeof HealthCheckRating[keyof typeof HealthCheckRating];
 
 interface BaseEntry {
   id: string;
   description: string;
   date: string;
   specialist: string;
-  diagnosisCodes?: Array<Diagnosis['code']>;
+  diagnosisCodes?: Array<Diagnosis['code']> | undefined;
 }
 
 interface HealthCheckEntry extends BaseEntry {
@@ -50,7 +50,7 @@ interface OccupationalHealthcareEntry extends BaseEntry {
     sickLeave?: {
         startDate: string;
         endDate: string;
-    };
+    } | undefined;
 }
 
 export type Entry =
@@ -77,3 +77,47 @@ export interface Patient extends NewPatient {
 }
 
 export type NonSensitivePatient = Omit<Patient, 'ssn' | 'entries'>;
+
+const BaseEntrySchema = z.object({
+    description: z.string(),
+    date: z.string(),
+    specialist: z.string(),
+    diagnosisCodes: z.array(z.string()).optional()
+});
+
+const HospitalEntrySchema = BaseEntrySchema.extend({
+  type: z.literal("Hospital"),
+  discharge: z.object({
+    date: z.iso.date(),
+    criteria: z.string(),
+  }),
+});
+
+const OccupationalHealthcareEntrySchema = BaseEntrySchema.extend({
+  type: z.literal("OccupationalHealthcare"),
+
+  employerName: z.string(),
+
+  sickLeave: z.object({
+    startDate: z.iso.date(),
+    endDate: z.iso.date(),
+  }).optional(),
+});
+
+const HealthCheckEntrySchema = BaseEntrySchema.extend({
+  type: z.literal("HealthCheck"),
+
+  healthCheckRating: z.union([
+    z.literal(HealthCheckRating.Healthy),
+    z.literal(HealthCheckRating.LowRisk),
+    z.literal(HealthCheckRating.HighRisk),
+    z.literal(HealthCheckRating.CriticalRisk),
+  ]),
+});
+
+export const EntryWithoutIdSchema = z.discriminatedUnion("type", [
+  HospitalEntrySchema,
+  OccupationalHealthcareEntrySchema,
+  HealthCheckEntrySchema,
+]);
+
